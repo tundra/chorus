@@ -7,6 +7,5 @@
 #include "chorus.hh"
 
 TEST(chorus, anything) {
-  new int[3];
   ASSERT_EQ(4, chorus::Main::get_four());
 }
