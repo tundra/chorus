@@ -1,0 +1,6 @@
+[submodule "deps/neutrino"]
+	path = deps/neutrino
+	url = https://github.com/tundra/neutrino.git
+[submodule "deps/conprx"]
+	path = deps/conprx
+	url = https://github.com/tundra/conprx.git

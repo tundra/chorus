@@ -1,0 +1,29 @@
+# The default build. It really makes no difference which target is the default
+# and which are defined though the build matrix.
+language: c
+compiler: gcc
+script: mkmk init --config chorus.mkmk --debug --noisy && ./build.sh all run-tests
+install: source ./tools/enter-devenv.sh
+
+matrix:
+  include:
+    # Test a clang build in debug mode under valgrind.
+    - language: c
+      compiler: clang
+      script: mkmk init --config chorus.mkmk --debug --valgrind --noisy && ./build.sh all run-tests
+      install: source ./tools/enter-devenv.sh && sudo apt-get update && sudo apt-get install valgrind
+    # Test everything using an optimized clang build.
+    - language: c
+      compiler: clang
+      script: mkmk init --config chorus.mkmk --noisy && ./build.sh all run-tests
+      install: source ./tools/enter-devenv.sh
+    # Test with checks disabled.
+    - languate: c
+      compiler: clang
+      script: mkmk init --config chorus.mkmk --nochecks --noisy && ./build.sh all run-tests
+      install: source ./tools/enter-devenv.sh
+    # Check that the C code compiles using gcc.
+    - language: c
+      compiler: gcc
+      script: mkmk init --config chorus.mkmk --debug --noisy && ./build.sh all run-tests
+      install: source ./tools/enter-devenv.sh

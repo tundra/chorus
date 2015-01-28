@@ -1,0 +1,17 @@
+# Copyright 2015 the Neutrino authors (see AUTHORS).
+# Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+library_file_names = [
+  "chorus.cc",
+]
+
+# All the objects for the library source files. It might make sense to create
+# a real library at some point but for now this'll do.
+library = get_group("library")
+
+# Add the source file objects to the library.
+for library_file_name in library_file_names:
+  library_file = c.get_source_file(library_file_name)
+  library_file.add_include(get_dep("tclib").get_child("src", "c"))
+  object_file = library_file.get_object()
+  library.add_member(object_file)

@@ -1,0 +1,8 @@
+# Copyright 2015 the Neutrino authors (see AUTHORS).
+# Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+include_dep('neutrino', 'neutrino.mkmk')
+include_dep('conprx', 'conprx.mkmk')
+
+include('src', 'src.mkmk')
+include('tests', 'tests.mkmk')
