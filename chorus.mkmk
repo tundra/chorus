@@ -6,3 +6,7 @@ include_dep('conprx', 'conprx.mkmk')
 
 include('src', 'src.mkmk')
 include('tests', 'tests.mkmk')
+
+all = add_alias("all")
+all.add_member(get_external("src", "all"))
+all.add_member(get_external("tests", "all"))

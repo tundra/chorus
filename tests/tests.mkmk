@@ -8,3 +8,7 @@ run_c_tests.add_member(get_external("tests", "c", "run-tests"))
 
 run_tests = add_alias("run-tests")
 run_tests.add_member(run_c_tests)
+
+all = get_group('all')
+all.add_member(get_external("tests", "c", "library"))
+all.add_member(get_external("tests", "c", "main"))
