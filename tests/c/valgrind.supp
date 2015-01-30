@@ -1,3 +1,9 @@
+# Valgrind suppressions. See
+# http://valgrind.org/docs/manual/manual-core.html#manual-core.suppress
+
+# This is a false positive where nss_parse_service_list does a one-time heap
+# allocation during the first call and stores it in a static which valgrind
+# doesn't recognize. See https://sourceware.org/bugzilla/show_bug.cgi?id=14122.
 {
    <nss_parse_service_list>
    Memcheck:Leak
