@@ -11,7 +11,7 @@ matrix:
     # Test a clang build in debug mode under valgrind.
     - language: c
       compiler: clang
-      script: mkmk init --config chorus.mkmk --debug --valgrind --noisy && ./build.sh all run-tests
+      script: mkmk init --config chorus.mkmk --debug --valgrind --valgrind-flags "--gen-suppressions=all --suppressions=./tests/c/valgrind.supp" --noisy && ./build.sh all run-tests
       before_install: git submodule update --init --recursive
       install: source ./tools/enter-devenv.sh && sudo apt-get update && sudo apt-get install valgrind
     # Test everything using an optimized clang build.
