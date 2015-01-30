@@ -6,11 +6,21 @@
 
 #include "stdc.h"
 
+#include "std/stdvector.hh"
+#include <string>
+
 namespace chorus {
 
 class Main {
 public:
-  static size_t get_four();
+  // Add the user's shell executables to the given vector in prioritized order,
+  // such that the first one added is the one to use by default, the second one
+  // the one to use if the first one doesn't work, and so on. The same shell
+  // can be added multiple times. At least one shell is guaranteed to be added.
+  static void list_shells(std::vector<std::string> *out);
+
+  // Main entry-point.
+  static int main(int argc, const char *argv[]);
 };
 
 } // namespace chorus

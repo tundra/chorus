@@ -6,6 +6,15 @@
 
 #include "chorus.hh"
 
-TEST(chorus, anything) {
-  ASSERT_EQ(4, chorus::Main::get_four());
+using namespace chorus;
+
+TEST(chorus, shells) {
+  std::vector<std::string> shells;
+  Main::list_shells(&shells);
+  // There should always be at least a fallback shell.
+  ASSERT_TRUE(shells.size() > 0);
+  for (size_t i = 0; i < shells.size(); i++)
+    // This touches the contents of all the shells which, if there is an
+    // ownership issue, valgrind might be able to catch.
+    ASSERT_TRUE(strlen(shells[i].c_str()) > 0);
 }
