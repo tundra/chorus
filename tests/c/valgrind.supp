@@ -1,0 +1,6 @@
+{
+   <nss_parse_service_list>
+   Memcheck:Leak
+   ...
+   fun:nss_parse_service_list
+}
