@@ -48,7 +48,6 @@ private:
 };
 
 int Main::main(int argc, const char *argv[]) {
-  ensure_neutrino_format_handlers_registered();
   value_t result = try_main(argc, argv);
   if (is_condition(result)) {
     ERROR("try_main(%i, *) failed with %v", argc, result);
