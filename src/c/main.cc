@@ -5,5 +5,5 @@
 #include "chorus.hh"
 
 extern "C" int main(int argc, const char *argv[]) {
-  chorus::Main::main(argc, argv);
+  return chorus::Main::main(argc, argv);
 }

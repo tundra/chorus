@@ -5,18 +5,38 @@ library_file_names = [
   "chorus.cc",
 ]
 
+def build_nlib_c_src(outname, inlib):
+  # First generate the output file. This is a C file but as far as the build
+  # system is concerned it's just dumb output.
+  outfile = get_custom_exec_file(outname)
+  outfile.set_runner(py.get_source_file("../../src/sh/blob-to-c.py"))
+  inpath = inlib.get_output_file().get_path()
+  outpath = outfile.get_output_path()
+  outfile.set_arguments(inpath, outpath)
+  outfile.add_dependency(inlib)
+  outfile.set_title("Converting %s to %s" % (inpath, outpath))
+  return outfile
+
+nlibs = get_group("nlibs")
+nlib = get_dep_external("neutrino", "src", "n", "library")
+nlibs.add_member(build_nlib_c_src("nlib.c", nlib))
+nmain = get_external("src", "n", "main")
+nlibs.add_member(build_nlib_c_src("nmain.c", nmain))
+
 def compile_file(name):
   file = c.get_source_file(name)
   file.add_include(get_dep("tclib").get_child("src", "c"))
   file.add_include(get_dep("plankton").get_child("src", "c"))
-  return file.get_object()
+  file.add_include(get_dep("neutrino").get_child("src", "c"))
+  file.add_include(get_bindir().get_child("src", "c"))
+  object = file.get_object()
+  object.add_dependency(nlibs)
+  return object
 
 # All the objects for the library source files. It might make sense to create
 # a real library at some point but for now this'll do.
 library = get_group("library")
-library.add_dependency(get_dep_external('tclib', 'src', 'c', 'io', 'library'))
-library.add_dependency(get_dep_external('tclib', 'src', 'c', 'sync', 'library'))
-library.add_dependency(get_dep_external('plankton', 'src', 'c', 'library'))
+library.add_dependency(get_dep_external('neutrino', 'src', 'c', 'library'))
 
 # Add the source file objects to the library.
 for library_file_name in library_file_names:

@@ -1,0 +1,22 @@
+# Copyright 2014 the Neutrino authors (see AUTHORS).
+# Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+import os.path
+
+file_names = [
+  "chorus.n",
+]
+
+compiler = get_dep_external("neutrino", "src", "python", "neutrino", "main.py")
+modules = get_dep_external("neutrino", "src", "n", "files")
+library = get_dep_external("neutrino", "src", "n", "library")
+
+program = n.get_program("main")
+program.set_compiler(compiler)
+program.add_module(modules)
+
+for file_name in file_names:
+  # Compile the source file to a library.
+  source_file = n.get_source_file(file_name)
+  (filename, ext) = os.path.splitext(file_name)
+  program.add_source(source_file)

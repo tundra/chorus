@@ -9,6 +9,10 @@
 #include "std/stdvector.hh"
 #include <string>
 
+BEGIN_C_INCLUDES
+#include "value.h"
+END_C_INCLUDES
+
 namespace chorus {
 
 class Main {
@@ -21,6 +25,11 @@ public:
 
   // Main entry-point.
   static int main(int argc, const char *argv[]);
+
+private:
+  // Similar to main but returns a value for the caller to handle and turn into
+  // possibly an error message and/or status code.
+  static value_t try_main(int argc, const char *argv[]);
 };
 
 } // namespace chorus

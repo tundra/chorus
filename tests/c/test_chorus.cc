@@ -18,3 +18,8 @@ TEST(chorus, shells) {
     // ownership issue, valgrind might be able to catch.
     ASSERT_TRUE(strlen(shells[i].c_str()) > 0);
 }
+
+TEST(chorus, main) {
+  const char *argv[1] = {"test_chorus"};
+  ASSERT_EQ(0, Main::main(1, argv));
+}
