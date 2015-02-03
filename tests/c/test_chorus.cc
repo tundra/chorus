@@ -21,5 +21,5 @@ TEST(chorus, shells) {
 
 TEST(chorus, main) {
   const char *argv[1] = {"test_chorus"};
-  ASSERT_EQ(0, Main::main(1, argv));
+  ASSERT_EQ(939, Main::main(1, argv));
 }

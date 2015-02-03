@@ -3,6 +3,6 @@
 
 import $core;
 
-def $main() => null;
+def $main() => 939;
 
 do $main();

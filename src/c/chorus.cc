@@ -53,7 +53,12 @@ int Main::main(int argc, const char *argv[]) {
   if (is_condition(result)) {
     ERROR("try_main(%i, *) failed with %v", argc, result);
     return 1;
+  } else if (is_integer(result)) {
+    // This is the expected behavior: main returns an integer which we'll use
+    // as the exit code.
+    return get_integer_value(result);
   } else {
+    WARN("try_main(%i, *) returned an unexpected value: %v", argc, result);
     return 0;
   }
 }
@@ -66,10 +71,13 @@ value_t Main::try_main(int argc, const char *argv[]) {
 
   runtime_t *runtime = NULL;
   TRY(new_runtime(&config, &runtime));
-  TRY(plugins.init_runtime(runtime));
-  TRY(plugins.run_main(runtime));
-  TRY(delete_runtime(runtime));
-  return success();
+  E_BEGIN_TRY_FINALLY();
+    E_TRY(plugins.init_runtime(runtime));
+    E_TRY_DEF(result, plugins.run_main(runtime));
+    E_RETURN(result);
+  E_FINALLY();
+    TRY(delete_runtime(runtime));
+  E_END_TRY_FINALLY();
 }
 
 ChorusPlugin::ChorusPlugin()
