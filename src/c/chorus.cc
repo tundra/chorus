@@ -126,6 +126,11 @@ value_t ChorusPlugin::test_method(builtin_arguments_t *args) {
 #  include "chorus-posix.cc"
 #endif
 
+
+#ifdef IS_MSVC
+#  include "chorus-msvc.cc"
+#endif
+
 #define DATA_SIZE_NAME ChorusPlugin::kNLibSize
 #define DATA_NAME ChorusPlugin::kNLibData
 #include "nlib.c"
