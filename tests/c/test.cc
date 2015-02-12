@@ -1,7 +1,7 @@
 //- Copyright 2015 the Neutrino authors (see AUTHORS).
 //- Licensed under the Apache License, Version 2.0 (see LICENSE).
 
-#include "stdc.h"
+#include "c/stdc.h"
 #include "test/asserts.hh"
 #include "test/unittest.hh"
 #include <stdarg.h>

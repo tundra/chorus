@@ -4,9 +4,9 @@
 #ifndef _CHORUS_HH
 #define _CHORUS_HH
 
-#include "stdc.h"
+#include "c/stdc.h"
 
-#include "std/stdvector.hh"
+#include "c/stdvector.hh"
 #include <string>
 
 BEGIN_C_INCLUDES

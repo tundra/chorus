@@ -1,8 +1,6 @@
 //- Copyright 2015 the Neutrino authors (see AUTHORS).
 //- Licensed under the Apache License, Version 2.0 (see LICENSE).
 
-#include "stdc.h"
-
 #include "chorus.hh"
 #include "plankton-inl.hh"
 
@@ -101,7 +99,7 @@ value_t ChorusPlugin::init_runtime(runtime_t *runtime) {
     E_TRY(runtime_load_library_from_stream(runtime, stream, nothing()));
     E_RETURN(success());
   E_FINALLY();
-    byte_in_stream_dispose(stream);
+    byte_in_stream_destroy(stream);
   E_END_TRY_FINALLY();
 }
 
@@ -113,7 +111,7 @@ value_t ChorusPlugin::run_main(runtime_t *runtime) {
     E_TRY_DEF(program, safe_runtime_plankton_deserialize(runtime, protect(pool, input)));
     E_RETURN(safe_runtime_execute_syntax(runtime, protect(pool, program)));
   E_FINALLY();
-    byte_in_stream_dispose(stream);
+    byte_in_stream_destroy(stream);
     DISPOSE_SAFE_VALUE_POOL(pool);
   E_END_TRY_FINALLY();
 }
