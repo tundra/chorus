@@ -5,10 +5,7 @@ compiler: gcc
 script: mkmk init --config chorus.mkmk --debug --noisy && ./build.sh all run-tests
 before_install: git submodule update --init --recursive
 install: source ./tools/enter-devenv.sh
-addons:
-  apt:
-    packages:
-      - virtualenv
+sudo: require
 
 matrix:
   include:
