@@ -6,6 +6,7 @@
 
 BEGIN_C_INCLUDES
 #include "format.h"
+#include "include/neutrino.h"
 #include "plugin.h"
 #include "runtime.h"
 #include "safe-inl.h"
@@ -23,7 +24,7 @@ public:
   static value_t test_method(builtin_arguments_t *args);
 
   // Initialize the runtime config, before the runtime has been constructed.
-  void init_config(runtime_config_t *config);
+  void init_config(neu_runtime_config_t *config);
 
   // Initialize the runtime itself.
   value_t init_runtime(runtime_t *runtime);
@@ -61,20 +62,19 @@ int Main::main(int argc, const char *argv[]) {
 }
 
 value_t Main::try_main(int argc, const char *argv[]) {
-  runtime_config_t config;
-  runtime_config_init_defaults(&config);
+  extended_runtime_config_t config = *extended_runtime_config_get_default();
   ChorusPlugin plugins;
-  plugins.init_config(&config);
+  plugins.init_config(&config.base);
 
   runtime_t *runtime = NULL;
   TRY(new_runtime(&config, &runtime));
-  E_BEGIN_TRY_FINALLY();
+  TRY_FINALLY {
     E_TRY(plugins.init_runtime(runtime));
     E_TRY_DEF(result, plugins.run_main(runtime));
     E_RETURN(result);
-  E_FINALLY();
-    TRY(delete_runtime(runtime));
-  E_END_TRY_FINALLY();
+  } FINALLY {
+    TRY(delete_runtime(runtime, dfDefault));
+  } YRT
 }
 
 ChorusPlugin::ChorusPlugin()
@@ -86,34 +86,34 @@ ChorusPlugin::ChorusPlugin()
   c_object_info_set_methods(&chorus_, methods_, 1);
 }
 
-void ChorusPlugin::init_config(runtime_config_t *config) {
+void ChorusPlugin::init_config(neu_runtime_config_t *config) {
   config->semispace_size_bytes = 10 * kMB;
   config->plugin_count = 1;
-  config->plugins = &plugins_;
+  config->plugins = (const void**) &plugins_;
 }
 
 value_t ChorusPlugin::init_runtime(runtime_t *runtime) {
   // Load the basic library.
   in_stream_t *stream = byte_in_stream_open(kNLibData, kNLibSize);
-  E_BEGIN_TRY_FINALLY();
+  TRY_FINALLY {
     E_TRY(runtime_load_library_from_stream(runtime, stream, nothing()));
     E_RETURN(success());
-  E_FINALLY();
+  } FINALLY {
     byte_in_stream_destroy(stream);
-  E_END_TRY_FINALLY();
+  } YRT
 }
 
 value_t ChorusPlugin::run_main(runtime_t *runtime) {
   in_stream_t *stream = byte_in_stream_open(kNMainData, kNMainSize);
   CREATE_SAFE_VALUE_POOL(runtime, 4, pool);
-  E_BEGIN_TRY_FINALLY();
+  TRY_FINALLY {
     E_TRY_DEF(input, read_stream_to_blob(runtime, stream));
     E_TRY_DEF(program, safe_runtime_plankton_deserialize(runtime, protect(pool, input)));
     E_RETURN(safe_runtime_execute_syntax(runtime, protect(pool, program)));
-  E_FINALLY();
+  } FINALLY {
     byte_in_stream_destroy(stream);
     DISPOSE_SAFE_VALUE_POOL(pool);
-  E_END_TRY_FINALLY();
+  } YRT
 }
 
 value_t ChorusPlugin::test_method(builtin_arguments_t *args) {
