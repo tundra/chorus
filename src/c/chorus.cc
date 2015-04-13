@@ -3,6 +3,7 @@
 
 #include "chorus.hh"
 #include "plankton-inl.hh"
+#include "include/service.hh"
 
 BEGIN_C_INCLUDES
 #include "format.h"
@@ -16,20 +17,11 @@ END_C_INCLUDES
 using namespace chorus;
 using namespace plankton;
 
-// Holds data used for interacting with neutrino.
-class ChorusPlugin {
+// Keeps track of the neutrino source code to run.
+class Chorus {
 public:
-  ChorusPlugin();
-  static value_t test_method(builtin_arguments_t *args);
-
-  // Initialize the runtime config, before the runtime has been constructed.
-  void init_config(runtime_config_t *config);
-
-  // Initialize the runtime itself.
-  value_t init_runtime(runtime_t *runtime);
-
-  // Run the main program in the given runtime.
-  value_t run_main(runtime_t *runtime);
+  static value_t load_library(neutrino::Runtime &runtime);
+  static value_t run_main(neutrino::Runtime &runtime);
 
 private:
   // The library data.
@@ -39,10 +31,17 @@ private:
   // The main program data.
   static const size_t kNMainSize;
   static const byte_t kNMainData[];
+};
 
-  c_object_info_t chorus_;
-  const c_object_info_t *plugins_;
-  c_object_method_t methods_[1];
+// The plugin that gets intalled into the runtime and supports interaction
+// between the neutrino and C++ part of chorus.
+class ChorusService : public neutrino::ForeignService {
+public:
+  // Installation hook.
+  virtual neutrino::Maybe<> bind(neutrino::ForeignServiceBinder *config);
+
+  // Yields a list of the shell executables.
+  void list_shells(neutrino::ServiceRequest *request);
 };
 
 int Main::main(int argc, const char *argv[]) {
@@ -61,82 +60,76 @@ int Main::main(int argc, const char *argv[]) {
 }
 
 value_t Main::try_main(int argc, const char *argv[]) {
-  runtime_config_t config;
-  runtime_config_init_defaults(&config);
-  ChorusPlugin plugins;
-  plugins.init_config(&config);
+  neutrino::RuntimeConfig config;
+  config.semispace_size_bytes = 10 * kMB;
 
-  runtime_t *runtime = NULL;
-  TRY(new_runtime(&config, &runtime));
-  E_BEGIN_TRY_FINALLY();
-    E_TRY(plugins.init_runtime(runtime));
-    E_TRY_DEF(result, plugins.run_main(runtime));
-    E_RETURN(result);
-  E_FINALLY();
-    TRY(delete_runtime(runtime));
-  E_END_TRY_FINALLY();
+  ChorusService service;
+  neutrino::Runtime runtime;
+  runtime.add_service(&service);
+  runtime.initialize(&config);
+
+  TRY(Chorus::load_library(runtime));
+  return Chorus::run_main(runtime);
 }
 
-ChorusPlugin::ChorusPlugin()
-  : plugins_(&chorus_) {
-  c_object_info_reset(&chorus_);
-  c_object_info_set_tag(&chorus_, new_integer(0xBAF));
-  c_object_method_t method = BUILTIN_METHOD("test", 0, test_method);
-  methods_[0] = method;
-  c_object_info_set_methods(&chorus_, methods_, 1);
-}
-
-void ChorusPlugin::init_config(runtime_config_t *config) {
-  config->semispace_size_bytes = 10 * kMB;
-  config->plugin_count = 1;
-  config->plugins = &plugins_;
-}
-
-value_t ChorusPlugin::init_runtime(runtime_t *runtime) {
+value_t Chorus::load_library(neutrino::Runtime &runtime) {
   // Load the basic library.
   in_stream_t *stream = byte_in_stream_open(kNLibData, kNLibSize);
-  E_BEGIN_TRY_FINALLY();
-    E_TRY(runtime_load_library_from_stream(runtime, stream, nothing()));
+  TRY_FINALLY {
+    E_TRY(runtime_load_library_from_stream(*runtime, stream, nothing()));
     E_RETURN(success());
-  E_FINALLY();
+  } FINALLY {
     byte_in_stream_destroy(stream);
-  E_END_TRY_FINALLY();
+  } YRT
 }
 
-value_t ChorusPlugin::run_main(runtime_t *runtime) {
+value_t Chorus::run_main(neutrino::Runtime &runtime) {
   in_stream_t *stream = byte_in_stream_open(kNMainData, kNMainSize);
-  CREATE_SAFE_VALUE_POOL(runtime, 4, pool);
-  E_BEGIN_TRY_FINALLY();
-    E_TRY_DEF(input, read_stream_to_blob(runtime, stream));
-    E_TRY_DEF(program, safe_runtime_plankton_deserialize(runtime, protect(pool, input)));
-    E_RETURN(safe_runtime_execute_syntax(runtime, protect(pool, program)));
-  E_FINALLY();
+  CREATE_SAFE_VALUE_POOL(*runtime, 4, pool);
+  TRY_FINALLY
+    E_TRY_DEF(input, read_stream_to_blob(*runtime, stream));
+    E_TRY_DEF(program, safe_runtime_plankton_deserialize(*runtime, protect(pool, input)));
+    E_RETURN(safe_runtime_execute_syntax(*runtime, protect(pool, program)));
+  FINALLY
     byte_in_stream_destroy(stream);
     DISPOSE_SAFE_VALUE_POOL(pool);
-  E_END_TRY_FINALLY();
+  YRT
 }
 
-value_t ChorusPlugin::test_method(builtin_arguments_t *args) {
-  return new_integer(100);
+neutrino::Maybe<> ChorusService::bind(neutrino::ForeignServiceBinder *config) {
+  config->set_namespace_name("chorus");
+  config->set_display_name("Chorus");
+  config->add_method("list_shells", tclib::new_callback(&ChorusService::list_shells, this));
+  return neutrino::Maybe<>::with_value();
+}
+
+void ChorusService::list_shells(neutrino::ServiceRequest *request) {
+  std::vector<std::string> shells;
+  Main::list_shells(&shells);
+  plankton::Array result = request->factory()->new_array(shells.size());
+  for (size_t i = 0; i < shells.size(); i++) {
+    std::string shell = shells[i];
+    result.add(request->factory()->new_string(shell.c_str(), shell.length()));
+  }
+  request->fulfill(result);
 }
 
 #ifdef IS_GCC
 #  include "chorus-posix.cc"
 #endif
 
-
 #ifdef IS_MSVC
 #  include "chorus-msvc.cc"
 #endif
 
-#define DATA_SIZE_NAME ChorusPlugin::kNLibSize
-#define DATA_NAME ChorusPlugin::kNLibData
+#define DATA_SIZE_NAME Chorus::kNLibSize
+#define DATA_NAME Chorus::kNLibData
 #include "nlib.c"
 #undef DATA_SIZE_NAME
 #undef DATA_NAME
 
-#define DATA_SIZE_NAME ChorusPlugin::kNMainSize
-#define DATA_NAME ChorusPlugin::kNMainData
+#define DATA_SIZE_NAME Chorus::kNMainSize
+#define DATA_NAME Chorus::kNMainData
 #include "nmain.c"
 #undef DATA_SIZE_NAME
 #undef DATA_NAME

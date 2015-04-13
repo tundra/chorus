@@ -3,6 +3,10 @@
 
 import $core;
 
-def $main() => 939;
+def $main() {
+  def $chorus := $core:chorus;
+  $chorus->list_shells().then(fn $s => { $core:info($s); 939; });
+  939;
+}
 
 do $main();
