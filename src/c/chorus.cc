@@ -7,6 +7,7 @@
 
 BEGIN_C_INCLUDES
 #include "format.h"
+#include "include/neutrino.h"
 #include "plugin.h"
 #include "runtime.h"
 #include "safe-inl.h"
@@ -52,7 +53,7 @@ int Main::main(int argc, const char *argv[]) {
   } else if (is_integer(result)) {
     // This is the expected behavior: main returns an integer which we'll use
     // as the exit code.
-    return get_integer_value(result);
+    return (int) get_integer_value(result);
   } else {
     WARN("try_main(%i, *) returned an unexpected value: %v", argc, result);
     return 0;

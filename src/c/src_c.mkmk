@@ -28,7 +28,7 @@ def compile_file(name):
   file.add_include(get_dep("tclib").get_child("src", "c"))
   file.add_include(get_dep("plankton").get_child("src", "c"))
   file.add_include(get_dep("neutrino").get_child("src", "c"))
-  file.add_include(get_dep('neutrino'))
+  file.add_include(get_dep("neutrino"))
   file.add_include(get_bindir().get_child("src", "c"))
   object = file.get_object()
   object.add_dependency(nlibs)
