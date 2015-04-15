@@ -36,10 +36,10 @@ private:
 
 // The plugin that gets intalled into the runtime and supports interaction
 // between the neutrino and C++ part of chorus.
-class ChorusService : public neutrino::ForeignService {
+class ChorusService : public neutrino::NativeService {
 public:
   // Installation hook.
-  virtual neutrino::Maybe<> bind(neutrino::ForeignServiceBinder *config);
+  virtual neutrino::Maybe<> bind(neutrino::NativeServiceBinder *config);
 
   // Yields a list of the shell executables.
   void list_shells(neutrino::ServiceRequest *request);
@@ -89,7 +89,7 @@ value_t Chorus::run_main(neutrino::Runtime &runtime) {
   CREATE_SAFE_VALUE_POOL(*runtime, 4, pool);
   TRY_FINALLY
     E_TRY_DEF(input, read_stream_to_blob(*runtime, stream));
-    E_TRY_DEF(program, safe_runtime_plankton_deserialize(*runtime, protect(pool, input)));
+    E_TRY_DEF(program, safe_runtime_plankton_deserialize_blob(*runtime, protect(pool, input)));
     E_RETURN(safe_runtime_execute_syntax(*runtime, protect(pool, program)));
   FINALLY
     byte_in_stream_destroy(stream);
@@ -97,7 +97,7 @@ value_t Chorus::run_main(neutrino::Runtime &runtime) {
   YRT
 }
 
-neutrino::Maybe<> ChorusService::bind(neutrino::ForeignServiceBinder *config) {
+neutrino::Maybe<> ChorusService::bind(neutrino::NativeServiceBinder *config) {
   config->set_namespace_name("chorus");
   config->set_display_name("Chorus");
   config->add_method("list_shells", tclib::new_callback(&ChorusService::list_shells, this));
@@ -107,10 +107,10 @@ neutrino::Maybe<> ChorusService::bind(neutrino::ForeignServiceBinder *config) {
 void ChorusService::list_shells(neutrino::ServiceRequest *request) {
   std::vector<std::string> shells;
   Main::list_shells(&shells);
-  plankton::Array result = request->factory()->new_array(shells.size());
+  plankton::Array result = request->factory()->new_array((uint32_t) shells.size());
   for (size_t i = 0; i < shells.size(); i++) {
     std::string shell = shells[i];
-    result.add(request->factory()->new_string(shell.c_str(), shell.length()));
+    result.add(request->factory()->new_string(shell.c_str(), (uint32_t) shell.length()));
   }
   request->fulfill(result);
 }
