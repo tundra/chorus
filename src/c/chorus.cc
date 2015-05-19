@@ -43,6 +43,9 @@ public:
 
   // Yields a list of the shell executables.
   void list_shells(neutrino::ServiceRequest *request);
+
+  // Runs a process.
+  void launch(neutrino::ServiceRequest *request);
 };
 
 int Main::main(int argc, const char *argv[]) {
@@ -101,6 +104,7 @@ neutrino::Maybe<> ChorusService::bind(neutrino::NativeServiceBinder *config) {
   config->set_namespace_name("chorus");
   config->set_display_name("Chorus");
   config->add_method("list_shells", tclib::new_callback(&ChorusService::list_shells, this));
+  config->add_method("launch", tclib::new_callback(&ChorusService::launch, this));
   return neutrino::Maybe<>::with_value();
 }
 
@@ -113,6 +117,10 @@ void ChorusService::list_shells(neutrino::ServiceRequest *request) {
     result.add(request->factory()->new_string(shell.c_str(), (uint32_t) shell.length()));
   }
   request->fulfill(result);
+}
+
+void ChorusService::launch(neutrino::ServiceRequest *request) {
+  request->fulfill(Variant::no());
 }
 
 #ifdef IS_GCC

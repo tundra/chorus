@@ -5,7 +5,12 @@ import $core;
 
 def $main() {
   def $chorus := $core:chorus;
-  $chorus->list_shells().then(fn $s => { $core:info($s); 939; });
+  $chorus->list_shells().then(fn $shells => {
+    $chorus->launch($shells).then(fn $v => {
+      $core:info($v);
+      939;
+    });
+  });
   939;
 }
 
