@@ -14,7 +14,8 @@ def compile_test_file(source):
   source.add_include(get_root().get_child('src', 'c'))
   source.add_include(get_dep("tclib").get_child("src", "c"))
   source.add_include(get_dep("neutrino").get_child("src", "c"))
-  return source.get_object()
+  object = source.get_object()
+  return object
 
 # Create a group containing the test files along with the runtime library.
 test_library = get_group("library")
