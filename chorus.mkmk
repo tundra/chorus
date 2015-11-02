@@ -3,6 +3,7 @@
 
 include_dep('neutrino', 'neutrino.mkmk')
 include_dep('conprx', 'conprx.mkmk')
+include_dep('matisse', 'matisse.mkmk')
 
 include('src', 'src.mkmk')
 include('tests', 'tests.mkmk')
